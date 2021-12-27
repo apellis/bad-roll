@@ -1,3 +1,6 @@
+mod integer;
+mod modular;
+
 fn main() {
-    println!("Hello, world!");
+    println!("is 91 prime? {}", integer::is_prime(91));
 }
