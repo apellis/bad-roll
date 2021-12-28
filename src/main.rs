@@ -17,4 +17,13 @@ fn main() {
     println!("-1 * {} = {:?}", val1, res1.scalar_times(-1));
     println!("-{} = {:?}", val1, res1.negated());
     assert_eq!(res1.scalar_times(-1), res1.negated());
+
+    println!("(527, 1258) -> {:?}", integer::gcd_with_coefficients(527, 1258));
+    println!("(228, 1056) -> {:?}", integer::gcd_with_coefficients(228, 1056));
+    println!(
+        "(163961, 167181) -> {:?}",
+        integer::gcd_with_coefficients(163961, 167181));
+    println!(
+        "(3892394, 239847) -> {:?}",
+        integer::gcd_with_coefficients(3892394, 239847));
 }
