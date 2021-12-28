@@ -1,2 +1,2 @@
-mod integer;
-mod modular;
+pub mod integer;
+pub mod modular;
