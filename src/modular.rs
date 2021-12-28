@@ -1,3 +1,5 @@
+use super::integer::gcd_with_coefficients;
+
 /// Represents a residue modulo n
 #[derive(Debug, PartialEq, Eq)]
 pub struct Residue {
@@ -6,9 +8,16 @@ pub struct Residue {
 }
 
 impl Residue {
-    pub fn from_integer(n: u128, modulus: u128) -> Residue {
+    pub fn from_unsigned_integer(n: u128, modulus: u128) -> Residue {
         Residue {
-            value: n,
+            value: n.rem_euclid(modulus),
+            modulus
+        }
+    }
+
+    pub fn from_signed_integer(n: i128, modulus: u128) -> Residue {
+        Residue {
+            value: n.rem_euclid(modulus as i128) as u128,
             modulus
         }
     }
@@ -29,10 +38,8 @@ impl Residue {
         other.assert_valid();
         assert_eq!(self.modulus, other.modulus);
 
-        Residue {
-            value: self.reduce_value(self.value + other.value),
-            modulus: self.modulus
-        }
+        Residue::from_unsigned_integer(
+            self.reduce_value(self.value + other.value), self.modulus)
     }
 
     pub fn times(&self, other: &Residue) -> Residue {
@@ -40,26 +47,37 @@ impl Residue {
         other.assert_valid();
         assert_eq!(self.modulus, other.modulus);
 
-        Residue {
-            value: self.reduce_value(self.value * other.value),
-            modulus: self.modulus
-        }
+        Residue::from_unsigned_integer(
+            self.reduce_value(self.value * other.value), self.modulus)
     }
 
     pub fn scalar_times(&self, scalar: i128) -> Residue {
         self.assert_valid();
 
-        Residue {
-            value: self.reduce_value(
-                self.value * (scalar as u128).rem_euclid(self.modulus)),
-            modulus: self.modulus
-        }
+        Residue::from_unsigned_integer(
+            self.reduce_value(self.value * self.reduce_value(scalar as u128)),
+            self.modulus)
     }
 
-    pub fn negated(&self) -> Residue {
+    pub fn neg(&self) -> Residue {
         self.assert_valid();
 
         self.scalar_times(-1)
+    }
+
+    pub fn inv(&self) -> Residue {
+        self.assert_valid();
+
+        let (g, u, v) = gcd_with_coefficients(
+            self.value, self.modulus);
+
+        if g == 1 {
+            return Residue::from_signed_integer(u, self.modulus);
+        } else {
+            panic!(
+                "Tried to invert non-unit {} (mod {})",
+                self.value, self.modulus);
+        }
     }
 }
 
@@ -68,7 +86,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_integer() {
+    fn test_from_unsigned_integer() {
+        // TODO
+    }
+
+    #[test]
+    fn test_from_signed_integer() {
         // TODO
     }
 
@@ -88,7 +111,12 @@ mod tests {
     }
 
     #[test]
-    fn test_negated() {
+    fn test_neg() {
+        // TODO
+    }
+
+    #[test]
+    fn test_inv() {
         // TODO
     }
 }
