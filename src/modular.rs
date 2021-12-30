@@ -1,7 +1,7 @@
 use super::integer::gcd_with_coefficients;
 
 /// Represents a residue modulo n
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Residue {
     value: u128,    // value in 0, 1, ..., n-1
     modulus: u128,  // the modulus
@@ -70,6 +70,31 @@ impl Residue {
                 "Tried to invert non-unit {} (mod {})",
                 self.value, self.modulus);
         }
+    }
+
+    /// Returns self raised to an integer power.
+    ///
+    /// This method uses a version of the "square then halve the exponent"
+    /// method for fast squaring. Requires O(sqrt(e)) time, O(1) space.
+    pub fn pow(&self, mut e: i128) -> Residue {
+        self.assert_valid();
+
+        if e < 0 {
+            return self.inv().pow(-e);
+        }
+
+        let mut a = self.clone();
+        let mut b = Residue::from_unsigned_integer(1, self.modulus);
+
+        while e > 0 {
+            if e % 2 == 1 {
+                b = b.times(&a);
+            }
+            a = a.times(&a);
+            e /= 2;
+        }
+
+        b
     }
 }
 
@@ -232,6 +257,37 @@ mod tests {
             assert_eq!(
                 Residue::from_unsigned_integer(z_val, modulus),
                 Residue::from_unsigned_integer(x_val, modulus).inv());
+        }
+    }
+
+    #[test]
+    fn test_pow() {
+        // format: (modulus, x_val, e, z_val) where x^e == z
+        let test_cases: Vec<(u128, u128, i128, u128)> = vec![
+            (7, 1, 1, 1),
+            (7, 2, 1, 2),
+            (7, 2, 0, 1),
+            (7, 2, -1, 4),
+            (7, 5, 0, 1),
+            (7, 5, 1, 5),
+            (7, 5, 2, 4),
+            (7, 5, 3, 6),
+            (7, 5, 4, 2),
+            (7, 5, 5, 3),
+            (7, 5, 6, 1),
+            (7, 5, 200, 4),
+            (10, 3, 1, 3),
+            (10, 3, 2, 9),
+            (10, 3, 3, 7),
+            (10, 3, 4, 1),
+            (10, 3, 5, 3),
+            (10, 3, 255, 7),
+        ];
+
+        for &(modulus, x_val, e, z_val) in test_cases.iter() {
+            assert_eq!(
+                Residue::from_unsigned_integer(z_val, modulus),
+                Residue::from_unsigned_integer(x_val, modulus).pow(e));
         }
     }
 }
