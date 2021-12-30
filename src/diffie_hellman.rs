@@ -2,18 +2,18 @@ use rand::Rng;
 
 use super::modular::Residue;
 
-fn choose_base(modulus: u128) -> Residue {
+pub fn choose_base(modulus: u128) -> Residue {
     Residue::primitive_root(modulus)
 }
 
-fn generate_secret_and_shared_value(base: &Residue) -> (i128, Residue) {
+pub fn generate_secret_and_shared_value(base: &Residue) -> (i128, Residue) {
     let mut rng = rand::thread_rng();
     let private_secret: i128 = rng.gen();
     let shared_value = base.pow(private_secret);
     (private_secret, shared_value)
 }
 
-fn compute_shared_secret(
+pub fn compute_shared_secret(
         private_secret: i128, other_shared_value: &Residue) -> Residue {
     other_shared_value.pow(private_secret)
 }
