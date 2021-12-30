@@ -1,4 +1,7 @@
-use super::integer::gcd_with_coefficients;
+use rand::Rng;
+use crate::integer::is_prime;
+
+use super::integer::{gcd_with_coefficients, euler_totient, prime_factorize};
 
 /// Represents a residue modulo n
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -95,6 +98,45 @@ impl Residue {
         }
 
         b
+    }
+
+    /// Returns a primitive root for the given modulus.
+    ///
+    /// Uses the method of guessing random integers between 1 and n-1 and
+    /// testing each as follows:
+    ///     x is primitive if and only if x^{phi(n)/p} != 1 (mod n)
+    ///     for all prime factors p of phi(n), where phi(n) is Euler's
+    ///     totient function.
+    ///
+    /// Since n / phi(n-1) is O(log(log(n))), it should not take too many
+    /// guesses in order to find a primitive root.
+    ///
+    /// Warning: currently only works for n prime. In general, primitive roots
+    /// exist if and only if
+    ///     n = 1, 2, 4, p^k, or 2p^k,
+    /// where p is an odd prime and k is a positive integer.
+    /// TODO: handle other cases
+    pub fn primitive_root(modulus: u128) -> Residue {
+        if !is_prime(modulus) {
+            panic!("Residue::primitive_root() only supports integer moduli.")
+        }
+
+        let mut rng = rand::thread_rng();
+        let phi = euler_totient(modulus);
+        let primes: Vec<u128> = prime_factorize(phi)
+            .iter()
+            .map(|&(p, _)| p)
+            .collect();
+        let one = Residue::from_unsigned_integer(1, modulus);
+
+        'outer: loop {
+            let n = Residue::from_unsigned_integer(
+                rng.gen_range(1..modulus), modulus);
+            for &p in primes.iter() {
+                if n.pow((phi / p) as i128) == one { continue 'outer; }
+            }
+            return n;
+        }
     }
 }
 
@@ -289,5 +331,36 @@ mod tests {
                 Residue::from_unsigned_integer(z_val, modulus),
                 Residue::from_unsigned_integer(x_val, modulus).pow(e));
         }
+    }
+
+    #[test]
+    fn test_primitive_root() {
+        for &n in [2, 3, 5, 97].iter() {
+            let one = Residue::from_unsigned_integer(1, n);
+            let root = Residue::primitive_root(n);
+
+            // root is primitive if and only if none of
+            //     root, root^2, ..., root^{n-2}
+            // equals 1.
+            //
+            // TODO: This test doesn't quite work if the modulus is not prime.
+            // Once Residue::primitive_root() handles non-prime moduli, this
+            // test should be re-written to check the following three properties
+            // hold of {1, root, ..., root^{phi(modulus)-1}}:
+            //     1. all are distinct
+            //     2. all are units mod modulus;
+            // and that root^{phi(modulus)} = 1 mod modulus.
+            let mut root_power = one.clone();
+            for e in 1..(n-1) {
+                root_power = root_power.times(&root);
+                assert_ne!(root_power, one);
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_primitive_root_panics_non_prime_modulus () {
+        Residue::primitive_root(10);
     }
 }
