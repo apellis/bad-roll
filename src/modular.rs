@@ -6,8 +6,8 @@ use super::integer::{gcd_with_coefficients, euler_totient, prime_factorize};
 /// Represents a residue modulo n
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Residue {
-    value: u128,    // value in 0, 1, ..., n-1
-    modulus: u128,  // the modulus
+    pub value: u128,    // value in 0, 1, ..., n-1
+    pub modulus: u128,  // the modulus
 }
 
 impl Residue {
