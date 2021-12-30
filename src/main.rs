@@ -2,6 +2,7 @@ mod diffie_hellman;
 mod elgamal;
 mod integer;
 mod modular;
+mod rsa;
 
 fn main() {
     println!("is 91 prime? {}", integer::is_prime(91));
